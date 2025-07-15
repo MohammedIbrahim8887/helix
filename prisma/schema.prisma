@@ -60,6 +60,8 @@ model Account {
   createdAt             DateTime
   updatedAt             DateTime
 
+  accountGenerations AccountGenerations[]
+
   @@map("account")
 }
 
@@ -72,4 +74,16 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model AccountGenerations {
+  id        String   @id @default(uuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  key       String
+  caption   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("account_generations")
 }

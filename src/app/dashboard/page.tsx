@@ -9,27 +9,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { useState, useCallback } from "react";
+import { useCaptionGenerator } from "@/hooks/use-caption-generator";
 
 export default function DashboardPage() {
   const { data, isPending } = useSession();
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
+  const { uploadAndGenerate, isLoading, caption, error } =
+    useCaptionGenerator();
+
   const formSchema = z.object({
     image: z.array(z.instanceof(File)).min(1, "Please upload an image"),
-    caption: z.string().optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     defaultValues: {
       image: [],
-      caption: "",
     },
     resolver: zodResolver(formSchema),
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    console.log("Form data:", data);
-    console.log("Image file:", data.image[0]);
+    await uploadAndGenerate(data.image);
   };
 
   const handleFilesChange = useCallback(
@@ -53,6 +54,7 @@ export default function DashboardPage() {
       <p className="text-muted-foreground">
         Upload your images and get realtime captions
       </p>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -64,7 +66,7 @@ export default function DashboardPage() {
                   <div className="w-[40dvw]">
                     <ImageUploader
                       maxFiles={1}
-                      maxSizeMB={5}
+                      maxSizeMB={4}
                       onFilesChange={handleFilesChange}
                     />
                   </div>
@@ -72,15 +74,36 @@ export default function DashboardPage() {
               </FormItem>
             )}
           />
+
           <Button
             type="submit"
-            disabled={uploadedFiles.length === 0}
+            disabled={uploadedFiles.length === 0 || isLoading}
             className="w-full"
           >
-            Generate Caption
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <span>Processing...</span>
+              </div>
+            ) : (
+              "Generate Caption"
+            )}
           </Button>
         </form>
       </Form>
+
+      {error && (
+        <div className="text-destructive text-center p-4 border border-destructive rounded-md">
+          {error}
+        </div>
+      )}
+
+      {caption && (
+        <div className="max-w-2xl p-6 border rounded-lg bg-card">
+          <h3 className="font-semibold mb-2">Generated Caption:</h3>
+          <p className="text-muted-foreground">{caption}</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -14,7 +14,7 @@ interface ImageUploaderProps {
 
 export default function ImageUploader({
   maxFiles = 1,
-  maxSizeMB = 5,
+  maxSizeMB = 4,
   accept = "image/svg+xml,image/png,image/jpeg,image/jpg,image/gif",
   onFilesChange,
 }: ImageUploaderProps) {
@@ -41,7 +41,7 @@ export default function ImageUploader({
   useEffect(() => {
     if (onFilesChange) {
       const fileObjects = files.map((f) => f.file);
-      onFilesChange(fileObjects);
+      onFilesChange(fileObjects as File[]);
     }
   }, [files, onFilesChange]);
 
