@@ -28,7 +28,7 @@ export default function Home() {
               src="https://images.unsplash.com/photo-1667835949495-78a1ea9ecd77?q=80&w=1064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="AI Technology"
               fill
-              className="object-cover"
+              className="object-cover invert dark:invert-0"
               priority
             />
           </MaskedDiv>
@@ -49,7 +49,7 @@ export default function Home() {
               src="https://images.unsplash.com/photo-1675720788092-35ff32d69b0c?q=80&w=1035&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Creative Content"
               fill
-              className="object-cover"
+              className="object-cover invert dark:invert-0"
               priority
             />
           </MaskedDiv>
@@ -70,7 +70,7 @@ export default function Home() {
               src="https://images.unsplash.com/photo-1680055195868-2b12621ac283?q=80&w=2128&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Social Media"
               fill
-              className="object-cover"
+              className="object-cover invert dark:invert-0"
               priority
             />
           </MaskedDiv>
