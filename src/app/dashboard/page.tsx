@@ -8,16 +8,18 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { useState, useCallback } from "react";
-import { useCaptionGenerator } from "@/hooks/query/caption/use-caption-generator";
+import { useState, useCallback, useEffect } from "react";
+import { useCaptionGeneratorMutation } from "@/hooks/query/caption";
 import MyGenerationsLayout from "@/layout/dashboard/my-generations";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const { data, isPending } = useSession();
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const router = useRouter();
 
-  const { uploadAndGenerate, isLoading, caption, error } =
-    useCaptionGenerator();
+  const { uploadAndGenerate, isLoading, generation, error, isSuccess } =
+    useCaptionGeneratorMutation();
 
   const formSchema = z.object({
     image: z.array(z.instanceof(File)).min(1, "Please upload an image"),
@@ -29,6 +31,12 @@ export default function DashboardPage() {
     },
     resolver: zodResolver(formSchema),
   });
+
+  useEffect(() => {
+    if (isSuccess && generation?.id) {
+      router.push(`/dashboard/caption/edit?id=${generation.id}`);
+    }
+  }, [isSuccess, generation?.id, router]);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     await uploadAndGenerate(data.image);
@@ -99,10 +107,10 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {caption && (
+      {generation?.caption && (
         <div className="max-w-2xl p-6 border rounded-lg bg-card">
           <h3 className="font-semibold mb-2">Generated Caption:</h3>
-          <p className="text-muted-foreground">{caption}</p>
+          <p className="text-muted-foreground">{generation.caption}</p>
         </div>
       )}
 

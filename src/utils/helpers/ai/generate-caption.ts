@@ -3,7 +3,7 @@ import { openrouter } from "@/utils/configs/openrouter.config";
 
 export const generateCaption = async (imageUrl: string) => {
   const result = await generateText({
-    model: openrouter.chat("mistralai/mistral-small-3.2-24b-instruct:free"),
+    model: openrouter.chat("openai/gpt-4.1-nano"),
     messages: [
       {
         role: "user",

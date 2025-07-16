@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Search } from "lucide-react";
 import Image from "next/image";
 import { format } from "date-fns";
+import Link from "next/link";
 
 export default function MyGenerationsLayout() {
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
@@ -37,7 +38,9 @@ export default function MyGenerationsLayout() {
         <Input
           placeholder="Search captions..."
           value={searchTerm}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setSearchTerm(e.target.value)
+          }
           className="pl-10"
         />
       </div>
@@ -59,25 +62,27 @@ export default function MyGenerationsLayout() {
       ) : data?.data?.length ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {data.data.map((gen) => (
-            <Card key={gen.id} className="overflow-hidden group pt-0">
-              <CardContent className="p-0">
-                <div className="relative aspect-square">
-                  <Image
-                    src={`https://utfs.io/f/${gen.key}`}
-                    alt={gen.caption}
-                    fill
-                    className="object-cover transition-transform group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-4">
-                  <p className="text-sm line-clamp-3 mb-2">{gen.caption}</p>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {format(new Date(gen.updatedAt), "MMM d, yyyy")}
+            <Link href={`/dashboard/caption/edit?id=${gen.id}`} key={gen.id}>
+              <Card key={gen.id} className="overflow-hidden group pt-0">
+                <CardContent className="p-0">
+                  <div className="relative aspect-square">
+                    <Image
+                      src={`https://utfs.io/f/${gen.key}`}
+                      alt={gen.caption}
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                    />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="p-4">
+                    <p className="text-sm line-clamp-3 mb-2">{gen.caption}</p>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {format(new Date(gen.updatedAt), "MMM d, yyyy")}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       ) : (

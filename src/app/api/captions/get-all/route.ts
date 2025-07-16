@@ -1,4 +1,4 @@
-import { AccountGenerations } from "@/types/api/caption";
+import { AccountGenerations } from "@/generated/prisma";
 import { ApiPaginatedResponse } from "@/types/api/common";
 import { auth } from "@/utils/auth/auth";
 import { prisma } from "@/utils/configs/prisma.config";
