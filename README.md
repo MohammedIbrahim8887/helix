@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Helix - AI-Powered Image Caption Generator
+
+Helix is a modern web application that leverages artificial intelligence to generate creative and contextual captions for your images. With support for 6 different tonal variations, Helix helps you craft the perfect caption for any context.
+
+## Features
+
+- **AI-Powered Caption Generation**: Upload images and get intelligent, contextually relevant captions
+- **Multiple Tonal Variations**: Generate captions in 6 different tones:
+  - Professional
+  - Casual
+  - Humorous
+  - Formal
+  - Creative
+  - Descriptive
+
+- **User Dashboard**: Manage your generated captions and images in one place
+- **Easy Image Upload**: Drag-and-drop interface for seamless image uploading
+- **Caption History**: Access and edit your previously generated captions
+- **Dark/Light Theme**: Comfortable viewing experience with theme switching
+
+## Tech Stack
+
+- **Frontend**:
+  - Next.js 14 (App Router)
+  - React
+  - TypeScript
+  - Tailwind CSS
+  - shadcn/ui components
+  - React Query for data fetching
+
+- **Backend**:
+  - Next.js API Routes
+  - Prisma ORM
+  - OpenRouter AI for caption generation
+  - Uploadthing for image handling
+
+- **Authentication**:
+  - Better Auth for secure user authentication
 
 ## Getting Started
 
-First, run the development server:
-
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
+```
+
+2. Set up environment variables:
+Create a `.env` file with the following variables:
+```env
+DATABASE_URL="your-database-url"
+BETTER_AUTH_SECRET="your-auth-secret"
+BETTER_AUTH_URL="http://localhost:3000"
+OPENROUTER_API_KEY="your-openrouter-api-key"
+UPLOADTHING_SECRET="your-uploadthing-secret"
+UPLOADTHING_APP_ID="your-uploadthing-app-id"
+```
+
+3. Generate database schema:
+```bash
+bun db:generate
+```
+
+4. Run database migrations:
+```bash
+bun db:migrate
+```
+
+5. Start the development server:
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3002](http://localhost:3002) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+helix/
+├── prisma/           # Database schema and migrations
+├── public/           # Static assets
+└── src/
+    ├── app/         # Next.js app router pages and API routes
+    │   ├── api/     # API endpoints
+    │   ├── auth/    # Authentication pages
+    │   └── dashboard/ # User dashboard
+    ├── components/  # Reusable React components
+    │   ├── cards/
+    │   ├── file-uploads/
+    │   ├── toggles/
+    │   └── ui/
+    ├── hooks/       # Custom React hooks
+    │   ├── query/   # API query hooks
+    │   └── ui/      # UI utility hooks
+    ├── layout/      # Layout components
+    │   ├── common/
+    │   └── dashboard/
+    ├── lib/         # Utility functions
+    ├── types/       # TypeScript type definitions
+    └── utils/       # Configuration and helpers
+        ├── auth/
+        ├── configs/
+        ├── helpers/
+        └── providers/
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
