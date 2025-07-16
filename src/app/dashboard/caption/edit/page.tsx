@@ -14,8 +14,8 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, RefreshCw, Save } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, RefreshCw, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   useGetCaptionByIdQuery,
@@ -23,6 +23,7 @@ import {
   useRegenerateCaptionMutation,
 } from "@/hooks/query/caption";
 import MyGenerationsLayout from "@/layout/dashboard/my-generations";
+import Image from "next/image";
 
 const formSchema = z.object({
   caption: z
@@ -37,7 +38,6 @@ export default function EditCaptionPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const captionId = searchParams.get("id");
-  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -49,8 +49,11 @@ export default function EditCaptionPage() {
     isLoading,
     error,
   } = useGetCaptionByIdQuery(captionId || "");
+
   const updateCaptionMutation = useUpdateCaptionMutation();
   const regenerateCaptionMutation = useRegenerateCaptionMutation();
+
+  const watchedCaption = form.watch("caption");
 
   useEffect(() => {
     if (captionData?.data?.caption) {
@@ -60,6 +63,7 @@ export default function EditCaptionPage() {
 
   const onSubmit = (data: FormData) => {
     if (!captionId) return;
+
     updateCaptionMutation.mutate(
       { id: captionId, caption: data.caption },
       {
@@ -72,7 +76,7 @@ export default function EditCaptionPage() {
 
   const handleRegenerate = () => {
     if (!captionData?.data?.key) return;
-    setIsRegenerating(true);
+
     regenerateCaptionMutation.mutate(captionData.data.key, {
       onSuccess: (data) => {
         if (data?.data?.caption) {
@@ -82,7 +86,6 @@ export default function EditCaptionPage() {
       },
       onError: (error) =>
         toast.error(error.message || "Failed to regenerate caption"),
-      onSettled: () => setIsRegenerating(false),
     });
   };
 
@@ -90,10 +93,12 @@ export default function EditCaptionPage() {
 
   if (!captionId) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Invalid Caption ID</h1>
-          <Button onClick={handleBack}>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8">
+          <h1 className="text-3xl font-bold mb-6 text-destructive">
+            Invalid Caption ID
+          </h1>
+          <Button onClick={handleBack} size="lg">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -104,10 +109,10 @@ export default function EditCaptionPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p>Loading caption...</p>
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading your caption...</p>
         </div>
       </div>
     );
@@ -115,14 +120,14 @@ export default function EditCaptionPage() {
 
   if (error || !captionData?.data) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Caption Not Found</h1>
-          <p className="text-muted-foreground mb-4">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8">
+          <h1 className="text-3xl font-bold mb-4">Caption Not Found</h1>
+          <p className="text-muted-foreground mb-6 max-w-md">
             The caption you're looking for doesn't exist or you don't have
             access to it.
           </p>
-          <Button onClick={handleBack}>
+          <Button onClick={handleBack} size="lg">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -132,112 +137,117 @@ export default function EditCaptionPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={handleBack} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
-        <h1 className="text-3xl font-bold">Edit Caption</h1>
-        <p className="text-muted-foreground">
-          Edit your caption or regenerate a new one from the image
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Image</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-              {captionData.data.key ? (
-                <img
-                  src={`https://utfs.io/f/${captionData.data.key}`}
-                  alt="Uploaded image"
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              ) : (
-                <p className="text-muted-foreground">No image available</p>
-              )}
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-7xl p-6">
+        <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b mb-8 -mx-6 px-6 py-4 z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" onClick={handleBack}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+              <h1 className="text-2xl font-bold">Edit Caption</h1>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Caption Editor</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={handleRegenerate}
+                disabled={regenerateCaptionMutation.isPending}
               >
-                <FormField
-                  control={form.control}
-                  name="caption"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Caption</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Enter your caption here..."
-                          className="min-h-32 resize-none"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {regenerateCaptionMutation.isPending ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                Regenerate
+              </Button>
+              <Button
+                onClick={form.handleSubmit(onSubmit)}
+                disabled={updateCaptionMutation.isPending}
+              >
+                {updateCaptionMutation.isPending ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    disabled={updateCaptionMutation.isPending}
-                    className="flex-1"
-                  >
-                    {updateCaptionMutation.isPending ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        <span>Saving...</span>
-                      </div>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save Caption
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleRegenerate}
-                    disabled={
-                      regenerateCaptionMutation.isPending || isRegenerating
-                    }
-                  >
-                    {regenerateCaptionMutation.isPending || isRegenerating ? (
-                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-
-            {captionData.data.updatedAt && (
-              <p className="text-sm text-muted-foreground mt-4">
-                Last updated:{" "}
-                {new Date(captionData.data.updatedAt).toLocaleString()}
+        <div className="space-y-8 max-w-4xl mx-auto">
+          <Card className="p-0">
+            <CardContent className="p-6">
+              <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
+                {captionData.data.key ? (
+                  <Image
+                    src={`https://utfs.io/f/${captionData.data.key}`}
+                    alt="Uploaded image"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">No image available</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <h3 className="font-semibold mb-3">Current Caption</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {captionData.data.caption}
               </p>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="caption"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">
+                          Edit Caption
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Enter your caption here..."
+                            className="min-h-32 resize-none"
+                          />
+                        </FormControl>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>
+                            Character count: {watchedCaption?.length || 0}/1000
+                          </span>
+                          {captionData.data.updatedAt && (
+                            <span>
+                              Last updated:{" "}
+                              {new Date(
+                                captionData.data.updatedAt
+                              ).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
+          <MyGenerationsLayout />
       </div>
-      <MyGenerationsLayout />
     </div>
   );
 }

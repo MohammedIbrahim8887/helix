@@ -55,9 +55,16 @@ export const useCaptionGeneratorMutation = () => {
     mutationFn: generateCaptionApi,
   });
 
-  const uploadAndGenerate = (files: File[]) => {
+  const uploadAndGenerate = (files: File[], options?: { onSuccess?: () => void; onError?: (error: any) => void }) => {
     if (files.length === 0) return;
-    uploadMutation.mutate(files);
+    uploadMutation.mutate(files, {
+      onSuccess: () => {
+        if (options?.onSuccess) options.onSuccess();
+      },
+      onError: (error) => {
+        if (options?.onError) options.onError(error);
+      },
+    });
   };
 
   const reset = () => {
