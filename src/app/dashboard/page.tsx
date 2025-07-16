@@ -1,5 +1,4 @@
 "use client";
-
 import ImageUploader from "@/components/file-uploads/image-uploader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/utils/auth/auth-client";
@@ -7,38 +6,92 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState, useCallback, useEffect } from "react";
-import { useStreamingCaptionGenerator, useGetCaptionByIdQuery, useUpdateCaptionMutation } from "@/hooks/query/caption";
+import {
+  useStreamingCaptionGenerator,
+  useGetCaptionByIdQuery,
+  useUpdateCaptionMutation,
+} from "@/hooks/query/caption";
 import MyGenerationsLayout from "@/layout/dashboard/my-generations";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
-import { Loader2, Square, Copy, Edit3, Save, X, RefreshCw, RotateCcw } from "lucide-react";
+import {
+  Loader2,
+  Square,
+  Copy,
+  Edit3,
+  Save,
+  X,
+  RefreshCw,
+  RotateCcw,
+  Smile,
+  Frown,
+  Eye,
+  Zap,
+  Users,
+  Minus,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { captionTones } from "@/utils/helpers/caption-tones";
+
+const tonesWithIcons = captionTones.map((tone) => ({
+  ...tone,
+  icon:
+    tone.tone === "funny"
+      ? Smile
+      : tone.tone === "serious"
+      ? Frown
+      : tone.tone === "descriptive"
+      ? Eye
+      : tone.tone === "roasting"
+      ? Zap
+      : tone.tone === "social media"
+      ? Users
+      : Minus,
+}));
 
 export default function DashboardPage() {
   const { data, isPending } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editedCaption, setEditedCaption] = useState("");
-  
+  const [selectedTone, setSelectedTone] = useState("social media");
+  const [regenerateTone, setRegenerateTone] = useState("social media");
+
   const captionId = searchParams.get("id");
 
   const { data: captionData } = useGetCaptionByIdQuery(captionId || "");
-  
+
   const updateCaptionMutation = useUpdateCaptionMutation();
 
-  const handleCaptionGenerated = useCallback((newCaptionId: string) => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set("id", newCaptionId);
-    router.push(`?${newSearchParams.toString()}`);
-  }, [router, searchParams]);
+  const handleCaptionGenerated = useCallback(
+    (newCaptionId: string) => {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set("id", newCaptionId);
+      router.push(`?${newSearchParams.toString()}`);
+    },
+    [router, searchParams]
+  );
 
   const {
     uploadAndGenerate,
@@ -46,15 +99,15 @@ export default function DashboardPage() {
     currentCaption,
     isLoading,
     error,
-    stop,
-  } = useStreamingCaptionGenerator(handleCaptionGenerated);
+  } = useStreamingCaptionGenerator(handleCaptionGenerated, selectedTone);
 
   const formSchema = z.object({
     image: z.array(z.instanceof(File)).min(1, "Please upload an image"),
+    tone: z.string().min(1, "Please select a tone"),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
-    defaultValues: { image: [] },
+    defaultValues: { image: [], tone: selectedTone },
     resolver: zodResolver(formSchema),
   });
 
@@ -66,8 +119,21 @@ export default function DashboardPage() {
     }
   }, [currentCaption, captionData?.data?.caption, isEditing]);
 
+  // Update form when tone changes
+  useEffect(() => {
+    form.setValue("tone", selectedTone);
+  }, [selectedTone, form]);
+
+  // Initialize regenerate tone from existing caption data
+  useEffect(() => {
+    if (captionData?.data && !currentCaption) {
+      setRegenerateTone(selectedTone);
+    }
+  }, [captionData, currentCaption, selectedTone]);
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsEditing(false);
+    setSelectedTone(data.tone);
     uploadAndGenerate(data.image);
   };
 
@@ -84,6 +150,8 @@ export default function DashboardPage() {
     setUploadedFiles([]);
     setIsEditing(false);
     setEditedCaption("");
+    setSelectedTone("social media");
+    setRegenerateTone("social media");
     form.reset();
   };
 
@@ -123,11 +191,14 @@ export default function DashboardPage() {
       return;
     }
     setIsEditing(false);
+    setSelectedTone(regenerateTone); // Update the main tone to match regenerate tone
     regenerate(captionData.data.key);
   };
 
   const copyToClipboard = () => {
-    const textToCopy = isEditing ? editedCaption : (currentCaption || captionData?.data?.caption || "");
+    const textToCopy = isEditing
+      ? editedCaption
+      : currentCaption || captionData?.data?.caption || "";
     navigator.clipboard.writeText(textToCopy);
     toast.success("Caption copied to clipboard!");
   };
@@ -135,6 +206,13 @@ export default function DashboardPage() {
   const displayCaption = currentCaption || captionData?.data?.caption || "";
   const hasCaption = Boolean(displayCaption);
   const showLoadingState = isLoading && !hasCaption;
+
+  const selectedToneConfig = tonesWithIcons.find(
+    (t) => t.tone === selectedTone
+  );
+  const regenerateToneConfig = tonesWithIcons.find(
+    (t) => t.tone === regenerateTone
+  );
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
@@ -157,7 +235,7 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto"
+            className="w-2xl mx-auto"
           >
             <Card>
               <CardContent>
@@ -166,8 +244,7 @@ export default function DashboardPage() {
                     src={`https://utfs.io/f/${captionData.data.key}`}
                     alt={captionData.data.caption}
                     className="object-cover"
-                    width={500}
-                    height={500}
+                    fill
                   />
                 </div>
               </CardContent>
@@ -199,6 +276,53 @@ export default function DashboardPage() {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="tone"
+                render={() => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">
+                      Voice Tone
+                    </FormLabel>
+                    <Select
+                      value={selectedTone}
+                      onValueChange={setSelectedTone}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a tone" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {tonesWithIcons.map((tone) => {
+                          const IconComponent = tone.icon;
+                          return (
+                            <SelectItem key={tone.tone} value={tone.tone}>
+                              <div className="flex items-center gap-2 w-full">
+                                <IconComponent className="w-4 h-4" />
+                                <div className="flex gap-2 items-center w-full">
+                                  <div className="font-medium">
+                                    {tone.label}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {tone.description}
+                                  </div>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {selectedToneConfig && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {selectedToneConfig.description}
+                      </p>
+                    )}
+                  </FormItem>
+                )}
+              />
+
               <div className="flex gap-2">
                 <Button
                   type="submit"
@@ -210,20 +334,72 @@ export default function DashboardPage() {
                   ) : null}
                   Generate Caption
                 </Button>
-
-                {isLoading && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={stop}
-                    size="icon"
-                  >
-                    <Square className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
             </form>
           </Form>
+        )}
+
+        {captionData?.data && hasCaption && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-2xl mx-auto"
+          >
+            <Card>
+              <CardContent>
+                <label className="text-sm font-semibold">
+                  Regenerate with different tone
+                </label>
+                <div className="flex items-center gap-4 mt-2 justify-between w-full">
+                  <Select
+                    value={regenerateTone}
+                    onValueChange={setRegenerateTone}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Select a tone for regeneration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tonesWithIcons.map((tone) => {
+                        const IconComponent = tone.icon;
+                        return (
+                          <SelectItem key={tone.tone} value={tone.tone}>
+                            <div className="flex items-center gap-2">
+                              <IconComponent className="w-4 h-4" />
+                              <div className="flex gap-2 items-center">
+                                <div className="font-medium">{tone.label}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {tone.description}
+                                </div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    onClick={handleRegenerate}
+                    disabled={isLoading}
+                    className="shrink-0"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                    )}
+                    Regenerate
+                  </Button>
+                </div>
+                {regenerateToneConfig && (
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                    <regenerateToneConfig.icon className="w-3 h-3" />
+                    {regenerateToneConfig.description}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
 
         <AnimatePresence>
@@ -237,9 +413,19 @@ export default function DashboardPage() {
               <Card>
                 <CardContent>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">
-                      {currentCaption ? "Generated Caption" : "Current Caption"}
-                    </h3>
+                    <div>
+                      <h3 className="font-semibold">
+                        {currentCaption
+                          ? "Generated Caption"
+                          : "Current Caption"}
+                      </h3>
+                      {selectedToneConfig && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <selectedToneConfig.icon className="w-3 h-3" />
+                          {selectedToneConfig.label} tone
+                        </p>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       {!isEditing ? (
                         <>
@@ -252,21 +438,6 @@ export default function DashboardPage() {
                             <Copy className="w-4 h-4 mr-2" />
                             Copy
                           </Button>
-                          {captionData?.data?.key && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleRegenerate}
-                              disabled={isLoading}
-                            >
-                              {isLoading ? (
-                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                              ) : (
-                                <RefreshCw className="w-4 h-4 mr-2" />
-                              )}
-                              Regenerate
-                            </Button>
-                          )}
                           <Button
                             variant="outline"
                             size="sm"
@@ -299,7 +470,10 @@ export default function DashboardPage() {
                           <Button
                             size="sm"
                             onClick={handleSave}
-                            disabled={updateCaptionMutation.isPending || !editedCaption.trim()}
+                            disabled={
+                              updateCaptionMutation.isPending ||
+                              !editedCaption.trim()
+                            }
                           >
                             {updateCaptionMutation.isPending ? (
                               <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -320,11 +494,13 @@ export default function DashboardPage() {
                           value={editedCaption}
                           onChange={(e) => setEditedCaption(e.target.value)}
                           placeholder="Edit your caption..."
-                          className="min-h-24 resize-none w-xl"
+                          className="min-h-24 resize-none"
                           maxLength={1000}
                         />
                         <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Character count: {editedCaption.length}/1000</span>
+                          <span>
+                            Character count: {editedCaption.length}/1000
+                          </span>
                         </div>
                       </div>
                     ) : (

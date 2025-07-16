@@ -71,11 +71,13 @@ export const useDeleteCaptionMutation = () => {
 };
 
 export const useStreamingCaptionGenerator = (
-  onCaptionGenerated?: (captionId: string) => void
+  onCaptionGenerated?: (captionId: string) => void,
+  tone: string = "social media"
 ) => {
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [shouldTriggerGeneration, setShouldTriggerGeneration] = useState(false);
+  const [currentTone, setCurrentTone] = useState(tone);
   const queryClient = useQueryClient();
 
   const uploadMutation = useMutation({
@@ -97,11 +99,11 @@ export const useStreamingCaptionGenerator = (
     append,
     isLoading: isGenerating,
     error,
-    stop,
   } = useChat({
     api: "/api/captions/generate",
     body: {
       key: uploadedKey,
+      tone: currentTone,
     },
     onFinish: async () => {
       queryClient.invalidateQueries({ queryKey: ["captions"] });
@@ -109,10 +111,9 @@ export const useStreamingCaptionGenerator = (
       if (uploadedKey && onCaptionGenerated) {
         setTimeout(async () => {
           try {
-            const response = await axios.get<ApiPaginatedResponse<AccountGenerations>>(
-              "/api/captions/get-all", 
-              { params: { page: 1, limit: 10 } }
-            );
+            const response = await axios.get<
+              ApiPaginatedResponse<AccountGenerations>
+            >("/api/captions/get-all", { params: { page: 1, limit: 10 } });
 
             const latestCaption = response.data.data.find(
               (caption) => caption.key === uploadedKey
@@ -133,11 +134,11 @@ export const useStreamingCaptionGenerator = (
     append: regenAppend,
     isLoading: isRegeneratingChat,
     error: regenError,
-    stop: regenStop,
   } = useChat({
     api: "/api/captions/generate?type=regenerate",
     body: {
       key: uploadedKey,
+      tone: currentTone,
     },
     onFinish: () => {
       queryClient.invalidateQueries({ queryKey: ["captions"] });
@@ -150,15 +151,27 @@ export const useStreamingCaptionGenerator = (
     if (uploadedKey && shouldTriggerGeneration && !isRegenerating) {
       append({
         role: "user",
-        content: `Generate caption for image with key: ${uploadedKey}`,
+        content: `Generate caption for image with key: ${uploadedKey} using ${currentTone} tone`,
       });
       setShouldTriggerGeneration(false);
     }
-  }, [uploadedKey, shouldTriggerGeneration, isRegenerating, append]);
+  }, [
+    uploadedKey,
+    shouldTriggerGeneration,
+    isRegenerating,
+    append,
+    currentTone,
+  ]);
+
+  // Update tone when it changes
+  useEffect(() => {
+    setCurrentTone(tone);
+  }, [tone]);
 
   const uploadAndGenerate = (files: File[]) => {
     if (files.length === 0) return;
     setIsRegenerating(false);
+    setCurrentTone(tone); // Set current tone before generation
     uploadMutation.mutate(files);
   };
 
@@ -167,7 +180,7 @@ export const useStreamingCaptionGenerator = (
     setIsRegenerating(true);
     regenAppend({
       role: "user",
-      content: `Regenerate caption for image with key: ${key}`,
+      content: `Regenerate caption for image with key: ${key} using ${currentTone} tone`,
     });
   };
 
@@ -186,9 +199,8 @@ export const useStreamingCaptionGenerator = (
     isGenerating: finalIsGenerating,
     isLoading: uploadMutation.isPending || finalIsGenerating,
     error: uploadMutation.error || finalError,
-    stop: isRegenerating ? regenStop : stop,
     messages: isRegenerating ? regenMessages : messages,
     uploadedKey,
     isRegenerating,
   };
-};  
+};

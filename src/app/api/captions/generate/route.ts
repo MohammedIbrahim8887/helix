@@ -3,6 +3,7 @@ import { auth } from "@/utils/auth/auth";
 import { prisma } from "@/utils/configs/prisma.config";
 import { streamText } from "ai";
 import { openrouter } from "@/utils/configs/openrouter.config";
+import { captionTones } from "@/utils/helpers/caption-tones";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,28 +13,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
-    let key: string | null = null;
-    
-    if (body.messages && body.messages.length > 0) {
-      const lastMessage = body.messages[body.messages.length - 1];
-      
-      if (lastMessage.data && lastMessage.data.key) {
-        key = lastMessage.data.key;
-      } 
-      else if (lastMessage.content && typeof lastMessage.content === 'string') {
-        const match = lastMessage.content.match(/key:\s*([a-zA-Z0-9]+)/);
-        if (match) {
-          key = match[1];
-        }
-      }
-    }
-    
-    if (!key && body.key) {
-      key = body.key;
-    }
+    console.log("Request body:", body);
 
-    const isRegenerate = request.nextUrl.searchParams.get("type") === "regenerate";
+    // Extract key and tone from body
+    const key = body.key;
+    const tone = body.tone || "social media"; // Default to social media tone
+
+    console.log("Extracted key:", key, "tone:", tone);
+
+    const isRegenerate =
+      request.nextUrl.searchParams.get("type") === "regenerate";
 
     if (!key) {
       return new Response("Image key is required", { status: 400 });
@@ -47,6 +36,14 @@ export async function POST(request: NextRequest) {
       return new Response("Account not found", { status: 404 });
     }
 
+    // Find the tone configuration
+    const toneConfig = captionTones.find((t) => t.tone === tone);
+    const promptText = toneConfig
+      ? toneConfig.prompt
+      : captionTones.find((t) => t.tone === "social media")!.prompt;
+
+    console.log("Using tone:", tone, "with prompt:", promptText);
+
     const imageUrl = `https://utfs.io/f/${key}`;
 
     const result = streamText({
@@ -57,7 +54,7 @@ export async function POST(request: NextRequest) {
           content: [
             {
               type: "text",
-              text: "Generate a descriptive and engaging caption for this image. Make it social media ready with relevant hashtags.",
+              text: promptText,
             },
             {
               type: "image",
@@ -77,12 +74,22 @@ export async function POST(request: NextRequest) {
               where: { id: existing.id },
               data: { caption: text, updatedAt: new Date() },
             });
-            console.log("Updated existing caption for key:", key);
+            console.log(
+              "Updated existing caption for key:",
+              key,
+              "with tone:",
+              tone
+            );
           } else {
             await prisma.accountGenerations.create({
               data: { accountId: account.id, key, caption: text },
             });
-            console.log("Created new caption for key:", key);
+            console.log(
+              "Created new caption for key:",
+              key,
+              "with tone:",
+              tone
+            );
           }
         } catch (error) {
           console.error("Failed to save caption:", error);
