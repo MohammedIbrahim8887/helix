@@ -15,9 +15,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("Request body:", body);
 
-    // Extract key and tone from body
     const key = body.key;
-    const tone = body.tone || "social media"; // Default to social media tone
+    const tone = body.tone || "social media";
 
     console.log("Extracted key:", key, "tone:", tone);
 
@@ -36,7 +35,6 @@ export async function POST(request: NextRequest) {
       return new Response("Account not found", { status: 404 });
     }
 
-    // Find the tone configuration
     const toneConfig = captionTones.find((t) => t.tone === tone);
     const promptText = toneConfig
       ? toneConfig.prompt

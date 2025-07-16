@@ -11,20 +11,56 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   useDeleteCaptionMutation,
   useGetCaptionByIdQuery,
   useStreamingCaptionGenerator,
-  useUpdateCaptionMutation
+  useUpdateCaptionMutation,
 } from "@/hooks/query/caption";
 import MyGenerationsLayout from "@/layout/dashboard/my-generations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, RefreshCw, Save, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  RefreshCw,
+  Save,
+  Trash2,
+  Smile,
+  Frown,
+  Eye,
+  Zap,
+  Users,
+  Minus,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { captionTones } from "@/utils/helpers/caption-tones";
+
+// Add icons to the imported tones
+const tonesWithIcons = captionTones.map((tone) => ({
+  ...tone,
+  icon:
+    tone.tone === "funny"
+      ? Smile
+      : tone.tone === "serious"
+      ? Frown
+      : tone.tone === "descriptive"
+      ? Eye
+      : tone.tone === "roasting"
+      ? Zap
+      : tone.tone === "social media"
+      ? Users
+      : Minus,
+}));
 
 const formSchema = z.object({
   caption: z
@@ -39,6 +75,7 @@ export default function EditCaptionPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const captionId = searchParams.get("id");
+  const [selectedTone, setSelectedTone] = useState("social media");
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -56,15 +93,19 @@ export default function EditCaptionPage() {
     regenerate,
     currentCaption: streamingCaption,
     isGenerating,
-  } = useStreamingCaptionGenerator();
-  
+  } = useStreamingCaptionGenerator(undefined, selectedTone);
+
   const handleRegenerate = () => {
     if (!captionData?.data?.key) return;
     regenerate(captionData.data.key);
   };
+
   const deleteCaptionMutation = useDeleteCaptionMutation();
 
   const watchedCaption = form.watch("caption");
+  const selectedToneConfig = tonesWithIcons.find(
+    (t) => t.tone === selectedTone
+  );
 
   useEffect(() => {
     if (streamingCaption) {
@@ -159,6 +200,29 @@ export default function EditCaptionPage() {
               <h1 className="text-2xl font-bold">Edit Caption</h1>
             </div>
             <div className="flex items-center gap-2">
+              <Select value={selectedTone} onValueChange={setSelectedTone}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a tone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tonesWithIcons.map((tone) => {
+                    const IconComponent = tone.icon;
+                    return (
+                      <SelectItem key={tone.tone} value={tone.tone}>
+                        <div className="flex items-center gap-2">
+                          <IconComponent className="w-4 h-4" />
+                          <div className="flex gap-2">
+                            <div className="font-medium">{tone.label}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {tone.description}
+                            </div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 onClick={handleRegenerate}
@@ -217,6 +281,7 @@ export default function EditCaptionPage() {
               </div>
             </CardContent>
           </Card>
+
           <Card>
             <CardContent>
               <h3 className="font-semibold mb-3">Current Caption</h3>
@@ -225,6 +290,7 @@ export default function EditCaptionPage() {
               </p>
             </CardContent>
           </Card>
+
           <Card>
             <CardContent>
               <Form {...form}>
@@ -268,7 +334,7 @@ export default function EditCaptionPage() {
             </CardContent>
           </Card>
         </div>
-          <MyGenerationsLayout />
+        <MyGenerationsLayout />
       </div>
     </div>
   );
