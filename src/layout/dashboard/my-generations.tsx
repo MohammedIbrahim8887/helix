@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   useGetAllCaptionsQuery
 } from "@/hooks/query/caption";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 

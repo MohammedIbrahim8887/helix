@@ -1,11 +1,7 @@
 "use client";
 import ImageUploader from "@/components/file-uploads/image-uploader";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useSession } from "@/utils/auth/auth-client";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -13,7 +9,6 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -21,35 +16,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState, useCallback, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  useStreamingCaptionGenerator,
   useGetCaptionByIdQuery,
+  useStreamingCaptionGenerator,
   useUpdateCaptionMutation,
 } from "@/hooks/query/caption";
 import MyGenerationsLayout from "@/layout/dashboard/my-generations";
-import { AnimatePresence, motion } from "framer-motion";
-import { toast } from "sonner";
+import { useSession } from "@/utils/auth/auth-client";
+import { captionTones } from "@/utils/helpers/caption-tones";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Loader2,
-  Square,
   Copy,
   Edit3,
-  Save,
-  X,
+  Eye,
+  Frown,
+  Loader2,
+  Minus,
   RefreshCw,
   RotateCcw,
+  Save,
   Smile,
-  Frown,
-  Eye,
-  Zap,
   Users,
-  Minus,
+  X,
+  Zap,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { useRouter, useSearchParams } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
-import { captionTones } from "@/utils/helpers/caption-tones";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const tonesWithIcons = captionTones.map((tone) => ({
   ...tone,
@@ -93,13 +92,8 @@ export default function DashboardPage() {
     [router, searchParams]
   );
 
-  const {
-    uploadAndGenerate,
-    regenerate,
-    currentCaption,
-    isLoading,
-    error,
-  } = useStreamingCaptionGenerator(handleCaptionGenerated, selectedTone);
+  const { uploadAndGenerate, regenerate, currentCaption, isLoading, error } =
+    useStreamingCaptionGenerator(handleCaptionGenerated, selectedTone);
 
   const formSchema = z.object({
     image: z.array(z.instanceof(File)).min(1, "Please upload an image"),

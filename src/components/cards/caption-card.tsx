@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AccountGenerations } from "@/generated/prisma";
 import { useDeleteCaptionMutation } from "@/hooks/query/caption";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Calendar, Loader2, Trash } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
