@@ -189,80 +189,90 @@ export default function EditCaptionPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl p-6">
-        <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b mb-8 -mx-6 px-6 py-4 z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" onClick={handleBack}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+      <div className="mx-auto max-w-7xl p-4 sm:p-6">
+        <div className="sticky top-2 z-50 bg-background/95 backdrop-blur-sm border-b mb-8 -mx-6 px-4 sm:px-6 py-4">
+          <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button variant="ghost" onClick={handleBack} size="sm">
+                <ArrowLeft className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back</span>
               </Button>
-              <h1 className="text-2xl font-bold">Edit Caption</h1>
+              <h1 className="text-lg sm:text-2xl font-bold truncate">Edit Caption</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <Select value={selectedTone} onValueChange={setSelectedTone}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a tone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tonesWithIcons.map((tone) => {
-                    const IconComponent = tone.icon;
-                    return (
-                      <SelectItem key={tone.tone} value={tone.tone}>
-                        <div className="flex items-center gap-2">
-                          <IconComponent className="w-4 h-4" />
-                          <div className="flex gap-2">
-                            <div className="font-medium">{tone.label}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {tone.description}
+            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
+              <div className="w-full sm:w-auto">
+                <Select value={selectedTone} onValueChange={setSelectedTone}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="Select a tone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tonesWithIcons.map((tone) => {
+                      const IconComponent = tone.icon;
+                      return (
+                        <SelectItem key={tone.tone} value={tone.tone}>
+                          <div className="flex items-center gap-2">
+                            <IconComponent className="w-4 h-4" />
+                            <div className="flex flex-col sm:flex-row sm:gap-2">
+                              <div className="font-medium">{tone.label}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {tone.description}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                onClick={handleRegenerate}
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-                Regenerate
-              </Button>
-              <Button
-                onClick={form.handleSubmit(onSubmit)}
-                disabled={updateCaptionMutation.isPending}
-              >
-                {updateCaptionMutation.isPending ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                Save
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={deleteCaptionMutation.isPending}
-              >
-                {deleteCaptionMutation.isPending ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
-                Delete
-              </Button>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-wrap gap-2 sm:gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleRegenerate}
+                  disabled={isGenerating}
+                  size="sm"
+                  className="flex-1 sm:flex-none"
+                >
+                  {isGenerating ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 sm:mr-2" />
+                  )}
+                  <span className="hidden sm:inline">Regenerate</span>
+                </Button>
+                <Button
+                  onClick={form.handleSubmit(onSubmit)}
+                  disabled={updateCaptionMutation.isPending}
+                  size="sm"
+                  className="flex-1 sm:flex-none"
+                >
+                  {updateCaptionMutation.isPending ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 sm:mr-2" />
+                  )}
+                  <span className="hidden sm:inline">Save</span>
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleteCaptionMutation.isPending}
+                  size="sm"
+                  className="flex-1 sm:flex-none"
+                >
+                  {deleteCaptionMutation.isPending ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4 sm:mr-2" />
+                  )}
+                  <span className="hidden sm:inline">Delete</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="space-y-8 max-w-4xl mx-auto">
+        <div className="space-y-6 sm:space-y-8 max-w-4xl mx-auto">
           <Card className="p-0">
             <CardContent className="p-6">
               <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">

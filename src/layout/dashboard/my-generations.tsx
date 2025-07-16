@@ -27,19 +27,19 @@ export default function MyGenerationsLayout() {
   const totalPages = data?.total ? Math.ceil(data.total / LIMIT) : 0;
 
   return (
-    <div className="min-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-4">
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-4">
       <p className="text-xl font-semibold">My Helix's Workspace</p>
-      <div className="flex justify-between items-center">
-        <div className="relative max-w-sm">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             placeholder="Search captions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full min-w-lg"
+            className="pl-10 w-full"
           />
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm sm:text-base">
           {data?.total || 0} captions created
         </p>
       </div>

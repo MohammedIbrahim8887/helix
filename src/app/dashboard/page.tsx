@@ -209,7 +209,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex min-h-screen items-center justify-center px-4 mt-32">
       <div className="flex w-full max-w-7xl flex-col gap-10">
         <div className="text-center">
           <h1 className="text-3xl font-bold">
@@ -229,7 +229,7 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-2xl mx-auto"
+            className="w-full max-w-2xl mx-auto px-4 sm:px-0"
           >
             <Card>
               <CardContent>
@@ -250,7 +250,7 @@ export default function DashboardPage() {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-6 w-2xl mx-auto"
+              className="space-y-6 w-full max-w-2xl mx-auto px-4 sm:px-0"
             >
               <FormField
                 control={form.control}
@@ -337,7 +337,7 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-2xl mx-auto"
+            className="w-full max-w-2xl mx-auto px-4 sm:px-0"
           >
             <Card>
               <CardContent>
@@ -402,7 +402,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-2xl mx-auto"
+              className="w-full max-w-2xl mx-auto px-4 sm:px-0"
             >
               <Card>
                 <CardContent>
@@ -524,7 +524,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-2xl mx-auto"
+              className="w-full max-w-2xl mx-auto px-4 sm:px-0"
             >
               <div className="rounded-md border border-destructive/20 bg-destructive/10 p-4 text-center text-sm font-medium text-destructive">
                 {error.message || "Failed to generate caption"}

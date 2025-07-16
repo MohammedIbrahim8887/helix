@@ -26,9 +26,9 @@ export default function RootLayout({
       <body className={`antialiased relative ${manrope.className}`}>
         <Providers>
           <Navbar />
-          <div className="mt-32">{children}</div>
+          {children}
           <Toaster />
-          <div className="fixed bottom-10 right-10">
+          <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-10 lg:right-10 z-40">
             <ThemeSwitcher />
           </div>
         </Providers>
