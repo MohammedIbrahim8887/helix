@@ -1,3 +1,4 @@
+import { AuthProvider } from "./auth-provider";
 import { ReactQueryClientProvider } from "./react-query-provider";
 import { ThemeProvider } from "./theme-provider";
 export function Providers({ children }: React.PropsWithChildren) {
@@ -8,7 +9,9 @@ export function Providers({ children }: React.PropsWithChildren) {
       enableSystem
       disableTransitionOnChange
     >
-      <ReactQueryClientProvider>{children}</ReactQueryClientProvider>
+      <AuthProvider>
+        <ReactQueryClientProvider>{children}</ReactQueryClientProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
