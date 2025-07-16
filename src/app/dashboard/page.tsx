@@ -49,6 +49,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { PhotoProvider, PhotoView } from "react-photo-view";
+import "react-photo-view/dist/react-photo-view.css";
 
 const tonesWithIcons = captionTones.map((tone) => ({
   ...tone,
@@ -233,13 +235,17 @@ export default function DashboardPage() {
           >
             <Card>
               <CardContent>
-                <div className="aspect-video bg-muted rounded-lg overflow-hidden relative mb-4">
-                  <Image
-                    src={`https://utfs.io/f/${captionData.data.key}`}
-                    alt={captionData.data.caption}
-                    className="object-cover"
-                    fill
-                  />
+                <div className="aspect-video bg-muted rounded-lg overflow-hidden relative mb-4 cursor-pointer">
+                  <PhotoProvider>
+                    <PhotoView src={`https://utfs.io/f/${captionData.data.key}`}>
+                      <Image
+                        src={`https://utfs.io/f/${captionData.data.key}`}
+                        alt={captionData.data.caption}
+                        className="object-cover"
+                        fill
+                      />
+                    </PhotoView>
+                  </PhotoProvider>
                 </div>
               </CardContent>
             </Card>

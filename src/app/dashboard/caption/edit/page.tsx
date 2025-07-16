@@ -44,6 +44,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { captionTones } from "@/utils/helpers/caption-tones";
+import { PhotoProvider, PhotoView } from "react-photo-view";
+import "react-photo-view/dist/react-photo-view.css";
 
 // Add icons to the imported tones
 const tonesWithIcons = captionTones.map((tone) => ({
@@ -188,7 +190,7 @@ export default function EditCaptionPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen lg:mt-16">
       <div className="mx-auto max-w-7xl p-4 sm:p-6">
         <div className="sticky top-2 z-50 bg-background/95 backdrop-blur-sm border-b mb-8 -mx-6 px-4 sm:px-6 py-4">
           <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
@@ -275,14 +277,18 @@ export default function EditCaptionPage() {
         <div className="space-y-6 sm:space-y-8 max-w-4xl mx-auto">
           <Card className="p-0">
             <CardContent className="p-6">
-              <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
+              <div className="aspect-video bg-muted rounded-lg overflow-hidden relative cursor-pointer">
                 {captionData.data.key ? (
-                  <Image
-                    src={`https://utfs.io/f/${captionData.data.key}`}
-                    alt="Uploaded image"
-                    fill
-                    className="object-cover"
-                  />
+                  <PhotoProvider>
+                    <PhotoView src={`https://utfs.io/f/${captionData.data.key}`}>
+                      <Image
+                        src={`https://utfs.io/f/${captionData.data.key}`}
+                        alt="Uploaded image"
+                        fill
+                        className="object-cover"
+                      />
+                    </PhotoView>
+                  </PhotoProvider>
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <p className="text-muted-foreground">No image available</p>
