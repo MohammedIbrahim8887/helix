@@ -21,6 +21,7 @@ import {
   useGetCaptionByIdQuery,
   useUpdateCaptionMutation,
   useRegenerateCaptionMutation,
+  useDeleteCaptionMutation,
 } from "@/hooks/query/caption";
 import MyGenerationsLayout from "@/layout/dashboard/my-generations";
 import Image from "next/image";
@@ -52,6 +53,7 @@ export default function EditCaptionPage() {
 
   const updateCaptionMutation = useUpdateCaptionMutation();
   const regenerateCaptionMutation = useRegenerateCaptionMutation();
+  const deleteCaptionMutation = useDeleteCaptionMutation();
 
   const watchedCaption = form.watch("caption");
 
@@ -86,6 +88,18 @@ export default function EditCaptionPage() {
       },
       onError: (error) =>
         toast.error(error.message || "Failed to regenerate caption"),
+    });
+  };
+
+  const handleDelete = () => {
+    if (!captionId) return;
+    deleteCaptionMutation.mutate(captionId, {
+      onSuccess: () => {
+        toast.success("Caption deleted successfully!");
+        router.push("/dashboard");
+      },
+      onError: (error) =>
+        toast.error(error.message || "Failed to delete caption"),
     });
   };
 
@@ -171,6 +185,18 @@ export default function EditCaptionPage() {
                   <Save className="w-4 h-4" />
                 )}
                 Save
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteCaptionMutation.isPending}
+              >
+                {deleteCaptionMutation.isPending ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                Delete
               </Button>
             </div>
           </div>

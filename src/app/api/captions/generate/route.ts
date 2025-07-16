@@ -55,21 +55,14 @@ export async function POST(
 
     let generation: AccountGenerations;
 
-    if (isRegenerate) {
-      const existing = await prisma.accountGenerations.findFirst({
-        where: { accountId: account.id, key },
+    const existing = await prisma.accountGenerations.findFirst({
+      where: { accountId: account.id, key },
+    });
+    if (isRegenerate && existing) {
+      generation = await prisma.accountGenerations.update({
+        where: { id: existing.id },
+        data: { caption: result.text, updatedAt: new Date() },
       });
-
-      if (existing) {
-        generation = await prisma.accountGenerations.update({
-          where: { id: existing.id },
-          data: { caption: result.text, updatedAt: new Date() },
-        });
-      } else {
-        generation = await prisma.accountGenerations.create({
-          data: { accountId: account.id, key, caption: result.text },
-        });
-      }
     } else {
       generation = await prisma.accountGenerations.create({
         data: { accountId: account.id, key, caption: result.text },

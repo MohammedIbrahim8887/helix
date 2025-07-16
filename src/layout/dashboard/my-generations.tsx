@@ -1,24 +1,22 @@
 "use client";
 
-import { useGetAllCaptionsQuery } from "@/hooks/query/caption";
-import type React from "react";
-import { useState, useEffect } from "react";
+import CaptionCard from "@/components/cards/caption-card";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Search, ImageIcon } from "lucide-react";
-import Image from "next/image";
-import { format } from "date-fns";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import {
+  useGetAllCaptionsQuery
+} from "@/hooks/query/caption";
+import { AnimatePresence, motion } from "framer-motion";
+import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const LIMIT = 12;
 
 export default function MyGenerationsLayout() {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-
   const { data, isLoading } = useGetAllCaptionsQuery(page, LIMIT, searchTerm);
 
   useEffect(() => {
@@ -68,32 +66,7 @@ export default function MyGenerationsLayout() {
               animate={{ opacity: 1 }}
             >
               {data.data.map((gen) => (
-                <motion.div
-                  key={gen.id}
-                  whileHover={{ y: -4 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <Link href={`/dashboard/caption/edit?id=${gen.id}`}>
-                    <Card className="h-full flex flex-col overflow-hidden p-0">
-                      <div className="relative aspect-square w-full">
-                        <Image
-                          src={`https://utfs.io/f/${gen.key}`}
-                          alt={gen.caption}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-
-                      <CardContent className="flex-1 flex flex-col justify-between p-4">
-                        <p className="text-sm line-clamp-3">{gen.caption}</p>
-                        <div className="flex items-center text-xs text-muted-foreground mt-2">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {format(new Date(gen.updatedAt), "MMM d, yyyy")}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
+                <CaptionCard key={gen.id} gen={gen} />
               ))}
             </motion.div>
 
