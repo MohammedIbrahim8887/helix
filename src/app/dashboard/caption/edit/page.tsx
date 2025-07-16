@@ -1,11 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -14,17 +10,21 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, RefreshCw, Save, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import {
-  useGetCaptionByIdQuery,
-  useUpdateCaptionMutation,
-  useRegenerateCaptionMutation,
   useDeleteCaptionMutation,
+  useGetCaptionByIdQuery,
+  useStreamingCaptionGenerator,
+  useUpdateCaptionMutation
 } from "@/hooks/query/caption";
 import MyGenerationsLayout from "@/layout/dashboard/my-generations";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, RefreshCw, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const formSchema = z.object({
   caption: z
@@ -52,16 +52,27 @@ export default function EditCaptionPage() {
   } = useGetCaptionByIdQuery(captionId || "");
 
   const updateCaptionMutation = useUpdateCaptionMutation();
-  const regenerateCaptionMutation = useRegenerateCaptionMutation();
+  const {
+    regenerate,
+    currentCaption: streamingCaption,
+    isGenerating,
+  } = useStreamingCaptionGenerator();
+  
+  const handleRegenerate = () => {
+    if (!captionData?.data?.key) return;
+    regenerate(captionData.data.key);
+  };
   const deleteCaptionMutation = useDeleteCaptionMutation();
 
   const watchedCaption = form.watch("caption");
 
   useEffect(() => {
-    if (captionData?.data?.caption) {
+    if (streamingCaption) {
+      form.setValue("caption", streamingCaption);
+    } else if (captionData?.data?.caption) {
       form.setValue("caption", captionData.data.caption);
     }
-  }, [captionData, form]);
+  }, [captionData, streamingCaption, form]);
 
   const onSubmit = (data: FormData) => {
     if (!captionId) return;
@@ -74,21 +85,6 @@ export default function EditCaptionPage() {
           toast.error(error.message || "Failed to update caption"),
       }
     );
-  };
-
-  const handleRegenerate = () => {
-    if (!captionData?.data?.key) return;
-
-    regenerateCaptionMutation.mutate(captionData.data.key, {
-      onSuccess: (data) => {
-        if (data?.data?.caption) {
-          form.setValue("caption", data.data.caption);
-          toast.success("Caption regenerated successfully!");
-        }
-      },
-      onError: (error) =>
-        toast.error(error.message || "Failed to regenerate caption"),
-    });
   };
 
   const handleDelete = () => {
@@ -166,9 +162,9 @@ export default function EditCaptionPage() {
               <Button
                 variant="outline"
                 onClick={handleRegenerate}
-                disabled={regenerateCaptionMutation.isPending}
+                disabled={isGenerating}
               >
-                {regenerateCaptionMutation.isPending ? (
+                {isGenerating ? (
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <RefreshCw className="w-4 h-4" />

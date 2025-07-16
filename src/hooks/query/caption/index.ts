@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { uploadFiles } from "@/utils/helpers/uploadthing";
 import { AccountGenerations } from "@/generated/prisma";
+import { useState, useEffect } from "react";
+import { useChat } from "@ai-sdk/react";
 
 export const useGetAllCaptionsQuery = (page = 1, limit = 12, search = "") => {
   return useQuery({
@@ -21,73 +23,16 @@ export const useGetCaptionByIdQuery = (id: string) => {
   return useQuery({
     queryKey: ["caption", id],
     queryFn: async () => {
-      const res = await axios.get<ApiResponse<AccountGenerations>>("/api/captions/get-by-id", {
-        params: { id },
-      });
+      const res = await axios.get<ApiResponse<AccountGenerations>>(
+        "/api/captions/get-by-id",
+        {
+          params: { id },
+        }
+      );
       return res.data;
     },
     enabled: !!id,
   });
-};
-
-const generateCaptionApi = async (
-  key: string
-): Promise<ApiResponse<AccountGenerations>> => {
-  const { data } = await axios.post("/api/captions/generate", { key });
-  return data;
-};
-
-const uploadFilesApi = async (files: File[]) => {
-  return uploadFiles("imageUploader", { files });
-};
-
-export const useCaptionGeneratorMutation = () => {
-  const uploadMutation = useMutation({
-    mutationFn: uploadFilesApi,
-    onSuccess: (uploadedFiles) => {
-      if (uploadedFiles?.[0]?.key) {
-        generateCaptionMutation.mutate(uploadedFiles[0].key);
-      }
-    },
-  });
-
-  const generateCaptionMutation = useMutation({
-    mutationFn: generateCaptionApi,
-  });
-
-  const uploadAndGenerate = (files: File[], options?: { onSuccess?: () => void; onError?: (error: any) => void }) => {
-    if (files.length === 0) return;
-    uploadMutation.mutate(files, {
-      onSuccess: () => {
-        if (options?.onSuccess) options.onSuccess();
-      },
-      onError: (error) => {
-        if (options?.onError) options.onError(error);
-      },
-    });
-  };
-
-  const reset = () => {
-    uploadMutation.reset();
-    generateCaptionMutation.reset();
-  };
-
-  return {
-    uploadAndGenerate,
-    isUploading: uploadMutation.isPending,
-    isGenerating: generateCaptionMutation.isPending,
-    generation: generateCaptionMutation.data?.data,
-    error:
-      uploadMutation.error?.message ||
-      generateCaptionMutation.error?.message ||
-      null,
-    isLoading: uploadMutation.isPending || generateCaptionMutation.isPending,
-    isSuccess: generateCaptionMutation.isSuccess,
-    isError: uploadMutation.isError || generateCaptionMutation.isError,
-    reset,
-    uploadMutation,
-    generateCaptionMutation,
-  };
 };
 
 export const useUpdateCaptionMutation = () => {
@@ -95,25 +40,14 @@ export const useUpdateCaptionMutation = () => {
 
   return useMutation({
     mutationFn: async (data: { id: string; caption: string }) => {
-      const res = await axios.put<ApiResponse<AccountGenerations>>("/api/captions/update", data);
+      const res = await axios.put<ApiResponse<AccountGenerations>>(
+        "/api/captions/update",
+        data
+      );
       return res.data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["caption", variables.id] });
-      queryClient.invalidateQueries({ queryKey: ["captions"] });
-    },
-  });
-};
-
-export const useRegenerateCaptionMutation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (key: string) => {
-      const res = await axios.post<ApiResponse<AccountGenerations>>("/api/captions/generate?type=regenerate", { key });
-      return res.data;
-    },
-    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["captions"] });
     },
   });
@@ -124,7 +58,10 @@ export const useDeleteCaptionMutation = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const res = await axios.delete<ApiResponse<null>>("/api/captions/delete", { data: { id } });
+      const res = await axios.delete<ApiResponse<null>>(
+        "/api/captions/delete",
+        { data: { id } }
+      );
       return res.data;
     },
     onSuccess: () => {
@@ -132,3 +69,126 @@ export const useDeleteCaptionMutation = () => {
     },
   });
 };
+
+export const useStreamingCaptionGenerator = (
+  onCaptionGenerated?: (captionId: string) => void
+) => {
+  const [uploadedKey, setUploadedKey] = useState<string | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [shouldTriggerGeneration, setShouldTriggerGeneration] = useState(false);
+  const queryClient = useQueryClient();
+
+  const uploadMutation = useMutation({
+    mutationFn: async (files: File[]) => {
+      return uploadFiles("imageUploader", { files });
+    },
+    onSuccess: (uploadedFiles) => {
+      if (uploadedFiles?.[0]?.key) {
+        const key = uploadedFiles[0].key;
+        setUploadedKey(key);
+        setIsRegenerating(false);
+        setShouldTriggerGeneration(true);
+      }
+    },
+  });
+
+  const {
+    messages,
+    append,
+    isLoading: isGenerating,
+    error,
+    stop,
+  } = useChat({
+    api: "/api/captions/generate",
+    body: {
+      key: uploadedKey,
+    },
+    onFinish: async () => {
+      queryClient.invalidateQueries({ queryKey: ["captions"] });
+
+      if (uploadedKey && onCaptionGenerated) {
+        setTimeout(async () => {
+          try {
+            const response = await axios.get<ApiPaginatedResponse<AccountGenerations>>(
+              "/api/captions/get-all", 
+              { params: { page: 1, limit: 10 } }
+            );
+
+            const latestCaption = response.data.data.find(
+              (caption) => caption.key === uploadedKey
+            );
+            if (latestCaption) {
+              onCaptionGenerated(latestCaption.id);
+            }
+          } catch (error) {
+            console.error("Failed to fetch caption ID:", error);
+          }
+        }, 500);
+      }
+    },
+  });
+
+  const {
+    messages: regenMessages,
+    append: regenAppend,
+    isLoading: isRegeneratingChat,
+    error: regenError,
+    stop: regenStop,
+  } = useChat({
+    api: "/api/captions/generate?type=regenerate",
+    body: {
+      key: uploadedKey,
+    },
+    onFinish: () => {
+      queryClient.invalidateQueries({ queryKey: ["captions"] });
+      queryClient.invalidateQueries({ queryKey: ["caption"] });
+      setIsRegenerating(false);
+    },
+  });
+
+  useEffect(() => {
+    if (uploadedKey && shouldTriggerGeneration && !isRegenerating) {
+      append({
+        role: "user",
+        content: `Generate caption for image with key: ${uploadedKey}`,
+      });
+      setShouldTriggerGeneration(false);
+    }
+  }, [uploadedKey, shouldTriggerGeneration, isRegenerating, append]);
+
+  const uploadAndGenerate = (files: File[]) => {
+    if (files.length === 0) return;
+    setIsRegenerating(false);
+    uploadMutation.mutate(files);
+  };
+
+  const regenerate = (key: string) => {
+    setUploadedKey(key);
+    setIsRegenerating(true);
+    regenAppend({
+      role: "user",
+      content: `Regenerate caption for image with key: ${key}`,
+    });
+  };
+
+  const currentCaption = isRegenerating
+    ? regenMessages.filter((m) => m.role === "assistant").pop()?.content || ""
+    : messages.filter((m) => m.role === "assistant").pop()?.content || "";
+
+  const finalIsGenerating = isRegenerating ? isRegeneratingChat : isGenerating;
+  const finalError = isRegenerating ? regenError : error;
+
+  return {
+    uploadAndGenerate,
+    regenerate,
+    currentCaption,
+    isUploading: uploadMutation.isPending,
+    isGenerating: finalIsGenerating,
+    isLoading: uploadMutation.isPending || finalIsGenerating,
+    error: uploadMutation.error || finalError,
+    stop: isRegenerating ? regenStop : stop,
+    messages: isRegenerating ? regenMessages : messages,
+    uploadedKey,
+    isRegenerating,
+  };
+};  
