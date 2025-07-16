@@ -10,7 +10,7 @@ interface GenerateCaptionResponse {
 const generateCaptionApi = async (
   key: string,
 ): Promise<GenerateCaptionResponse> => {
-  const response = await fetch("/api/generate-caption", {
+  const response = await fetch("/api/captions/generate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

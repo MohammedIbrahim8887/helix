@@ -25,7 +25,8 @@
       "@/components": ["./src/components"],
       "@/layouts": ["./src/layouts"],
       "@/hooks": ["./src/hooks"],
-      "@/generated": ["./src/generated"]
+      "@/generated": ["./src/generated"],
+      "@/types": ["./src/types"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

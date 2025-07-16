@@ -9,7 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { useState, useCallback } from "react";
-import { useCaptionGenerator } from "@/hooks/use-caption-generator";
+import { useCaptionGenerator } from "@/hooks/query/caption/use-caption-generator";
+import MyGenerationsLayout from "@/layout/dashboard/my-generations";
 
 export default function DashboardPage() {
   const { data, isPending } = useSession();
@@ -104,6 +105,8 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">{caption}</p>
         </div>
       )}
+
+      <MyGenerationsLayout/>
     </div>
   );
 }

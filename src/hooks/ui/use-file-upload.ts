@@ -15,6 +15,7 @@ export type FileMetadata = {
   size: number;
   type: string;
   url: string;
+  ufsUrl: string;
   id: string;
 };
 
